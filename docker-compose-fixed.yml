@@ -1,35 +1,33 @@
+version: '3.8'
+
 services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: userdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus
     ports:
-      - "5433:5432"  # Изменяем порт на 5433
+      - "9090:9090"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./prometheus-fixed.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.listen-address=0.0.0.0:9090'
+    networks:
+      - monitoring
 
-  app:
-    build: .
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=userdb
-      - DB_USER=postgres
-      - DB_PASSWORD=password
-      - PORT=8090
+  grafana:
+    image: grafana/grafana:9.5.0
+    container_name: grafana
     ports:
-      - "8095:8090"  # Изменяем порт на 8095
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - monitoring
     depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
+      - prometheus
 
-volumes:
-  postgres_data:
+networks:
+  monitoring:
+    driver: bridge

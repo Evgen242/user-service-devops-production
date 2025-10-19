@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  user-service:
+    image: ghcr.io/your-username/user-service:develop
+    environment:
+      - DB_HOST=postgres-staging
+      - ENVIRONMENT=staging
+    ports:
+      - "8090:8090"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=userdb_staging

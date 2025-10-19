@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: '103.125.216.110'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://103.125.216.110:8080'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['time_zone'] = 'UTC'
+        gitlab_rails['gitlab_email_enabled'] = false
+        # Оптимизации для экономии места
+        gitlab_rails['backup_keep_time'] = 604800
+        postgresql['shared_buffers'] = '64MB'
+        puma['worker_processes'] = 2
+        sidekiq['max_concurrency'] = 5
+    ports:
+      - '8080:80'
+      - '2222:22'
+    volumes:
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'
+    networks:
+      - gitlab-network
+
+networks:
+  gitlab-network:
+    driver: bridge

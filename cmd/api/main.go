@@ -7,9 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	"user-service/pkg/metrics"
+	customMiddleware "user-service/pkg/middleware"
+
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type User struct {
@@ -48,31 +52,32 @@ func initDB() error {
 }
 
 func healthCheck(c echo.Context) error {
+	dbStatus := "connected"
 	if db != nil {
 		if err := db.Ping(); err != nil {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{
-				"status":  "unhealthy", 
-				"message": "Database connection failed",
-			})
+			dbStatus = "disconnected"
+		} else {
+			metrics.DatabaseConnections.Set(1)
 		}
-		return c.JSON(http.StatusOK, map[string]string{
-			"status":    "healthy",
-			"timestamp": time.Now().Format(time.RFC3339),
-			"database":  "connected",
-		})
+	} else {
+		dbStatus = "mock_mode"
+		metrics.DatabaseConnections.Set(0)
 	}
-	
-	return c.JSON(http.StatusOK, map[string]string{
+
+	response := map[string]string{
 		"status":    "healthy",
 		"timestamp": time.Now().Format(time.RFC3339),
-		"database":  "mock_mode",
-	})
+		"database":  dbStatus,
+	}
+	
+	// Record health check operation
+	metrics.RecordUserOperation("health_check")
+	return c.JSON(http.StatusOK, response)
 }
 
 func getMetrics(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "Metrics endpoint - Prometheus metrics will be added later",
-	})
+	promhttp.Handler().ServeHTTP(c.Response(), c.Request())
+	return nil
 }
 
 func getUsers(c echo.Context) error {
@@ -83,6 +88,8 @@ func getUsers(c echo.Context) error {
 			{ID: 2, Name: "Jane Smith", Email: "jane@example.com", CreatedAt: time.Now()},
 			{ID: 3, Name: "Bob Johnson", Email: "bob@example.com", CreatedAt: time.Now()},
 		}
+		metrics.UsersCount.Set(float64(len(users)))
+		metrics.RecordUserOperation("get_users")
 		return c.JSON(http.StatusOK, users)
 	}
 
@@ -106,6 +113,10 @@ func getUsers(c echo.Context) error {
 		users = append(users, user)
 	}
 
+	// Update metrics
+	metrics.UsersCount.Set(float64(len(users)))
+	metrics.RecordUserOperation("get_users")
+
 	if len(users) == 0 {
 		return c.JSON(http.StatusOK, []User{})
 	}
@@ -120,12 +131,14 @@ func createUser(c echo.Context) error {
 	}
 
 	if err := c.Bind(&user); err != nil {
+		metrics.RecordUserOperation("create_user_error")
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid request body",
 		})
 	}
 
 	if user.Name == "" || user.Email == "" {
+		metrics.RecordUserOperation("create_user_invalid")
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Name and email are required",
 		})
@@ -133,6 +146,7 @@ func createUser(c echo.Context) error {
 
 	if db == nil {
 		// Mock response если БД не подключена
+		metrics.RecordUserOperation("create_user_mock")
 		return c.JSON(http.StatusCreated, map[string]interface{}{
 			"id":      time.Now().Unix(),
 			"name":    user.Name,
@@ -150,10 +164,19 @@ func createUser(c echo.Context) error {
 
 	if err != nil {
 		log.Printf("ERROR: Failed to create user: %v", err)
+		metrics.RecordUserOperation("create_user_error")
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to create user - may be duplicate email",
 		})
 	}
+
+	// Update users count
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	metrics.UsersCount.Set(float64(count))
+	
+	// Record successful creation
+	metrics.RecordUserOperation("create_user")
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"id":    id,
@@ -175,15 +198,19 @@ func main() {
 	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	e.Use(echoMiddleware.Logger())
+	e.Use(echoMiddleware.Recover())
+	e.Use(customMiddleware.MetricsMiddleware) // Используем наш middleware метрик
+	e.Use(echoMiddleware.CORS())
 
 	// Routes
 	e.GET("/health", healthCheck)
 	e.GET("/metrics", getMetrics) 
 	e.GET("/api/users", getUsers)
 	e.POST("/api/users", createUser)
+
+	// Start background metrics collectors
+	metrics.StartUptimeCounter()
 
 	// Запуск сервера
 	port := "8090"

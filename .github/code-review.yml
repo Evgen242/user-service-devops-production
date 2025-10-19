@@ -1,0 +1,32 @@
+name: "Code Review Bot"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Review
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const hasReviewBotComment = comments.some(comment => 
+              comment.user.login === 'github-actions[bot]'
+            );
+
+            if (!hasReviewBotComment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `👋 Привет! Я бот для проверки кода.\n\n**Что я проверяю:**\n- ✅ Соответствие Go code style\n- ✅ Наличие тестов\n- ✅ Безопасность\n- ✅ Качество кода\n\nУбедитесь что:\n- [ ] Все тесты проходят\n- [ ] Добавлены новые тесты при необходимости\n- [ ] Код соответствует стандартам\n- [ ] Нет уязвимостей безопасности`
+              });
+            }

@@ -1,0 +1,39 @@
+name: Monitoring Health Checks
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Every 5 minutes
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check User Service Health
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://your-service.com/health || echo "500")
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "❌ Health check failed: $RESPONSE"
+            exit 1
+          else
+            echo "✅ Health check passed"
+          fi
+
+      - name: Check Database Connection
+        run: |
+          # Проверка подключения к БД
+          echo "📊 Database health check simulated"
+          
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Health Check Failed',
+              body: 'Automated health check failed for user service. Please investigate.'
+            })

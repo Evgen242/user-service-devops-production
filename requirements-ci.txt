@@ -1,0 +1,13 @@
+# CI/CD Dependencies
+docker>=20.0
+docker-compose>=2.0
+trivy>=0.35
+golangci-lint>=1.50
+
+# Monitoring
+curl>=7.0
+jq>=1.6
+
+# Security
+bandit>=1.7
+safety>=2.0

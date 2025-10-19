@@ -1,0 +1,113 @@
+--- cmd/api/main.go.orig	2024-10-17 10:02:00.000000000 +0000
++++ cmd/api/main.go	2024-10-17 10:02:00.000000000 +0000
+@@ -9,6 +9,7 @@
+ 	"time"
+ 
+ 	"user-service/pkg/metrics"
++	"user-service/pkg/middleware"
+ 
+ 	"github.com/labstack/echo/v4"
+ 	"github.com/labstack/echo/v4/middleware"
+@@ -49,23 +50,6 @@
+ 	return db.Ping()
+ }
+ 
+-func metricsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+-	return func(c echo.Context) error {
+-		start := time.Now()
+-		method := c.Request().Method
+-		endpoint := c.Path()
+-
+-		err := next(c)
+-
+-		duration := time.Since(start).Seconds()
+-		status := fmt.Sprintf("%d", c.Response().Status)
+-
+-		metrics.HttpRequestsTotal.WithLabelValues(method, endpoint, status).Inc()
+-		metrics.HttpRequestDuration.WithLabelValues(method, endpoint).Observe(duration)
+-
+-		return err
+-	}
+-}
+ 
+ func healthCheck(c echo.Context) error {
+ 	dbStatus := "connected"
+@@ -83,6 +67,9 @@
+ 		Database:  dbStatus,
+ 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+ 	}
++	
++	// Record health check operation
++	metrics.RecordUserOperation("health_check")
+ 	return c.JSON(http.StatusOK, response)
+ }
+ 
+@@ -90,6 +77,7 @@
+ 	rows, err := db.Query("SELECT id, name, email, created_at FROM users ORDER BY created_at DESC")
+ 	if err != nil {
+ 		log.Printf("Error querying users: %v", err)
++		metrics.RecordDatabaseError("select", "users")
+ 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch users"})
+ 	}
+ 	defer rows.Close()
+@@ -105,6 +93,9 @@
+ 
+ 	// Update users count metric
+ 	metrics.UsersCount.Set(float64(len(users)))
++	
++	// Record operation
++	metrics.RecordUserOperation("get_users")
+ 
+ 	return c.JSON(http.StatusOK, users)
+ }
+@@ -112,10 +103,12 @@
+ func createUser(c echo.Context) error {
+ 	var req CreateUserRequest
+ 	if err := c.Bind(&req); err != nil {
++		metrics.RecordUserOperation("create_user_error")
+ 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+ 	}
+ 
+ 	if req.Name == "" || req.Email == "" {
++		metrics.RecordUserOperation("create_user_invalid")
+ 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Name and email are required"})
+ 	}
+ 
+@@ -126,6 +119,7 @@
+ 
+ 	if err != nil {
+ 		log.Printf("Error creating user: %v", err)
++		metrics.RecordDatabaseError("insert", "users")
+ 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user - may be duplicate email"})
+ 	}
+ 
+@@ -133,6 +127,9 @@
+ 	var count int
+ 	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+ 	metrics.UsersCount.Set(float64(count))
++	
++	// Record successful user creation
++	metrics.RecordUserOperation("create_user")
+ 
+ 	response := map[string]interface{}{
+ 		"id":      id,
+@@ -167,7 +164,7 @@
+ 	// Middleware
+ 	e.Use(middleware.Logger())
+ 	e.Use(middleware.Recover())
+-	e.Use(metricsMiddleware)
++	e.Use(middleware.EnhancedMetricsMiddleware)
+ 	e.Use(middleware.CORS())
+ 
+ 	// Routes
+@@ -175,6 +172,10 @@
+ 	e.GET("/metrics", metricsHandler)
+ 	e.GET("/api/users", getUsers)
+ 	e.POST("/api/users", createUser)
++	
++	// Start background metrics collectors
++	metrics.StartUptimeCounter()
++	metrics.UpdateGoMetrics()
+ 
+ 	port := os.Getenv("PORT")
+ 	if port == "" {

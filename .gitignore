@@ -4,14 +4,21 @@
 *.dll
 *.so
 *.dylib
+user-service
 
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool
+# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# IDE files
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# IDE
 .vscode/
 .idea/
 *.swp
@@ -20,23 +27,13 @@
 # Environment files
 .env
 .env.local
-.env.production
 
 # Docker
 docker-compose.override.yml
 
 # Logs
 *.log
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage files
-coverage.txt
-coverage.html
+logs/
 
 # Temporary files
 tmp/
