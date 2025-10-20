@@ -1,24 +1,51 @@
-k# User Service - DevOps Test Project
+# 🚀 User Service - Production DevOps Project
 
-## Описание
-Микросервис для управления пользователями с полным DevOps стеком.
+## 🌐 LIVE PRODUCTION URLs
+- **User Service API**: http://103.125.216.110:8090
+- **Grafana Dashboards**: http://103.125.216.110:3000 (admin/admin123) 
+- **Prometheus Metrics**: http://103.125.216.110:9090
+- **GitHub Repository**: https://github.com/Evgen242/user-service-devops-production
+- **CI/CD Pipeline**: https://github.com/Evgen242/user-service-devops-production/actions
 
-## Технологии
-- Go + Echo framework
-- PostgreSQL
-- Docker + Docker Compose
-- Prometheus + Grafana
-- GitHub Actions CI/CD
+## 🏗️ Production Architecture
+Internet Users
+↓
+http://103.125.216.110:8090 (User Service API)
+↓
+http://103.125.216.110:5433 (PostgreSQL Database)
+↓
+http://103.125.216.110:9090 (Prometheus Monitoring)
+↓
+http://103.125.216.110:3000 (Grafana Dashboards)
 
-## Быстрый старт
+text
+
+## 🚀 Quick Start
 ```bash
-docker-compose up -d
-API Endpoints
-GET /health - Health check
+# Deploy on production server
+docker-compose -f docker-compose-corrected.yml up -d
 
-GET /api/users - Получить пользователей
+# Test from anywhere in the world
+curl http://103.125.216.110:8090/health
+curl http://103.125.216.110:8090/api/users
+📊 Live Monitoring Stack
+API Health: http://103.125.216.110:8090/health
 
-POST /api/users - Создать пользователя
+Metrics: http://103.125.216.110:8090/metrics
 
-CI/CD
-Проект использует GitHub Actions 
+Prometheus UI: http://103.125.216.110:9090
+
+Grafana: http://103.125.216.110:3000
+
+✅ Production Features
+Public REST API accessible globally
+
+Real-time metrics and monitoring
+
+Automated CI/CD deployment
+
+Health checks and observability
+
+Docker containerization
+
+PostgreSQL persistence
