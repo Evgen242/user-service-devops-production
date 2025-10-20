@@ -13,7 +13,7 @@ A complete production-ready DevOps microservice demonstrating modern cloud-nativ
 
 | Service | URL | Status | Credentials |
 |---------|-----|---------|-------------|
-| **User Service API** | [http://103.125.216.110:8090/health](http://103.125.216.110:8090/health) | ✅ Live | - |
+| **User Service API** | [http://103.125.216.110:8090](http://103.125.216.110:8090) | ✅ Live | - |
 | **Grafana Dashboards** | [http://103.125.216.110:3000](http://103.125.216.110:3000) | ✅ Live | `admin` / `admin123` |
 | **Prometheus Metrics** | [http://103.125.216.110:9090](http://103.125.216.110:9090) | ✅ Live | - |
 | **GitHub Repository** | [https://github.com/Evgen242/user-service-devops-production/blob/main/README.md](https://github.com/Evgen242/user-service-devops-production/blob/main/README.md) | 🔄 Active | -|
