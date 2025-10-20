@@ -207,5 +207,3 @@ This project is created as a demonstration for DevOps position application.
 🚀 Ready for Production Deployment
 
 Last updated: October 2025
-
-</div> ```
