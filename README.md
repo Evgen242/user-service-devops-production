@@ -53,6 +53,7 @@ curl http://103.125.216.110:8090/api/users | jq '.'
 curl -X POST http://103.125.216.110:8090/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Demo User", "email":"demo@example.com"}' | jq '.'
+
 📊 Live Monitoring Stack
 Real-time Metrics
 API Health: http://103.125.216.110:8090/health
