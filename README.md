@@ -1,4 +1,4 @@
-# 🚀 User Service - Production DevOps Project
+#⭐ User Service - Production DevOps Project ⭐
 
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-blue)
 ![Docker](https://img.shields.io/badge/Docker-Containerized-green)
