@@ -1,4 +1,28 @@
-# ;) User Service - Production DevOps Project
+# 🚀 User Service - Production DevOps Project
+
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-blue)
+![Docker](https://img.shields.io/badge/Docker-Containerized-green)
+![Go](https://img.shields.io/badge/Go-1.21-success)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-informational)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-orange)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboards-yellow)
+
+A complete production-ready DevOps microservice demonstrating modern cloud-native practices with full monitoring, CI/CD, and public deployment.
+
+## 🌐 Live Production Environment
+
+| Service | URL | Status | Credentials |
+|---------|-----|---------|-------------|
+| **User Service API** | [http://103.125.216.110:8090](http://103.125.216.110:8090) | ✅ Live | - |
+| **Grafana Dashboards** | [http://103.125.216.110:3000](http://103.125.216.110:3000) | ✅ Live | `admin` / `admin123` |
+| **Prometheus Metrics** | [http://103.125.216.110:9090](http://103.125.216.110:9090) | ✅ Live | - |
+| **GitHub Repository** | [https://github.com/Evgen242/user-service-devops-production](https://github.com/Evgen242/user-service-devops-production) | 🔄 Active | - |
+| **CI/CD Pipeline** | [https://github.com/Evgen242/user-service-devops-production/actions](https://github.com/Evgen242/user-service-devops-production/actions) | ✅ Working | - |
+
+## 🏗️ System Architecture
+
+cat > README.md << 'EOF'
+# 🚀 User Service - Production DevOps Project
 
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-blue)
 ![Docker](https://img.shields.io/badge/Docker-Containerized-green)
@@ -38,10 +62,10 @@ git clone https://github.com/Evgen242/user-service-devops-production
 cd user-service-devops-production
 
 # 2. Start all services
-docker-compose -f docker-compose-corrected.yml up -d
+docker-compose -f config/docker-compose-corrected.yml up -d
 
 # 3. Verify deployment
-./test-all-services.sh
+./scripts/test-all-services.sh
 Quick API Tests
 # Health check
 curl http://103.125.216.110:8090/health
@@ -53,7 +77,6 @@ curl http://103.125.216.110:8090/api/users | jq '.'
 curl -X POST http://103.125.216.110:8090/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Demo User", "email":"demo@example.com"}' | jq '.'
-
 📊 Live Monitoring Stack
 Real-time Metrics
 API Health: http://103.125.216.110:8090/health
