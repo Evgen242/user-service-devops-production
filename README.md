@@ -203,7 +203,4 @@ Project: User Service DevOps
 📄 License
 This project is created as a demonstration for DevOps position application.
 
-<div align="center">
-🚀 Ready for Production Deployment
-
 Last updated: October 2025
